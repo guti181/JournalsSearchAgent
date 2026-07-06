@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generate HTML from raw Excel files</title>
+  <style>
+    :root {
+      --border: #d0d7de;
+      --text: #1f2328;
+      --bg: #f6f8fa;
+      --white: #ffffff;
+      --accent: #0969da;
+      --danger: #cf222e;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .wrap {
+      max-width: 760px;
+      margin: 60px auto;
+      padding: 0 20px;
+    }
+    .card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      box-shadow: 0 8px 24px rgba(16,24,40,0.06);
+    }
+    h1 {
+      margin: 0 0 12px;
+      font-size: 26px;
+    }
+    p {
+      margin: 0 0 20px;
+      line-height: 1.5;
+    }
+    .field {
+      margin-bottom: 18px;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+    input[type="file"] {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #fff;
+    }
+    .checkbox-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin: 18px 0 20px;
+    }
+    .checkbox-row label {
+      margin: 0;
+      font-weight: 500;
+    }
+    button {
+      border: 0;
+      background: var(--accent);
+      color: white;
+      padding: 12px 18px;
+      border-radius: 10px;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    .error {
+      margin-bottom: 16px;
+      color: var(--danger);
+      line-height: 1.45;
+    }
+    .note {
+      margin-top: 18px;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Generate HTML from raw Excel files</h1>
+      <p>Upload the raw <strong>keren</strong> Excel and <strong>agreement</strong> Excel files. The system will first clean them, then rebuild <strong>myName</strong> and <strong>name_changed</strong>, and then generate the final HTML.</p>
+
+      {% if error %}
+      <div class="error">{{ error }}</div>
+      {% endif %}
+
+      <form action="/generate" method="post" enctype="multipart/form-data">
+        <div class="field">
+          <label for="keren">Raw Keren Excel (.xlsx)</label>
+          <input id="keren" name="keren" type="file" accept=".xlsx" required>
+        </div>
+
+        <div class="field">
+          <label for="agreement">Raw Agreement Excel (.xlsx)</label>
+          <input id="agreement" name="agreement" type="file" accept=".xlsx" required>
+        </div>
+
+        <div class="checkbox-row">
+          <input id="include_cleaned_excels" name="include_cleaned_excels" type="checkbox">
+          <label for="include_cleaned_excels">Include cleaned Excel files in the output</label>
+        </div>
+
+        <button type="submit">Generate</button>
+      </form>
+
+      <div class="note">
+        If the checkbox is not selected, only the HTML file is downloaded. If it is selected, a ZIP file is downloaded containing the HTML, both cleaned Excel files, and both processed Excel files.
+      </div>
+    </div>
+  </div>
+</body>
+</html>

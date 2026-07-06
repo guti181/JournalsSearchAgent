@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>מערכת לחיפוש כתבי עת וספרים הזכאים למימון בפרסום הפתוח</title>
+  <style>
+    #appRoot {
+      --oa-border: #d0d7de;
+      --oa-text: #1f2328;
+      --oa-bg: #f6f8fa;
+      --oa-white: #ffffff;
+      --oa-hover: #eef4ff;
+      --oa-accent: #0969da;
+      direction: rtl;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      color: var(--oa-text);
+      background: var(--oa-bg);
+    }
+    #appRoot,
+    #appRoot * {
+      box-sizing: border-box;
+    }
+    #appRoot.oa-ltr {
+      direction: ltr;
+    }
+    #appRoot .wrap {
+      max-width: 980px;
+      margin: 48px auto;
+      padding: 0 20px;
+    }
+    #appRoot .card {
+      background: var(--oa-white);
+      border: 1px solid var(--oa-border);
+      border-radius: 16px;
+      padding: 28px;
+      box-shadow: 0 8px 24px rgba(16,24,40,0.06);
+    }
+    #appRoot .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+    #appRoot .title-wrap {
+      flex: 1;
+      text-align: right;
+    }
+    #appRoot.oa-ltr .title-wrap {
+      text-align: left;
+    }
+    #appRoot h1 {
+      margin: 0;
+      font-size: 26px;
+      color: var(--oa-text);
+    }
+    #appRoot p {
+      margin: 0 0 22px;
+      color: var(--oa-text);
+      line-height: 1.45;
+    }
+    #appRoot .lang-switch {
+      border: 1px solid var(--oa-border);
+      background: white;
+      color: var(--oa-text);
+      padding: 8px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    #appRoot .radio-row {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 18px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    #appRoot .radio-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #appRoot .panel {
+      display: none;
+      margin-top: 8px;
+    }
+    #appRoot .panel.active {
+      display: block;
+    }
+    #appRoot .search-area {
+      position: relative;
+      margin-bottom: 12px;
+    }
+    #appRoot input[type="text"] {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1px solid var(--oa-border);
+      border-radius: 12px;
+      font-size: 16px;
+      outline: none;
+      background: white;
+      color: var(--oa-text);
+    }
+    #appRoot input[type="text"]:focus {
+      border-color: var(--oa-accent);
+      box-shadow: 0 0 0 4px rgba(9,105,218,0.12);
+    }
+    #appRoot input[type="text"].placeholder-he {
+      text-align: right;
+      direction: rtl;
+    }
+    #appRoot input[type="text"].input-ltr {
+      text-align: left;
+      direction: ltr;
+    }
+    #appRoot .status {
+      margin-top: 18px;
+      font-size: 16px;
+      font-weight: 400;
+      white-space: normal;
+      line-height: 1.45;
+      color: var(--oa-text);
+    }
+    #appRoot .status,
+    #appRoot .status * {
+      line-height: 1.45 !important;
+    }
+    #appRoot:not(.oa-ltr) .status {
+      text-align: right;
+    }
+    #appRoot.oa-ltr .status {
+      text-align: left;
+    }
+    #appRoot .subtle-default {
+      color: var(--oa-text);
+    }
+    #appRoot .dropdown {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: calc(100% + 8px);
+      background: white;
+      border: 1px solid var(--oa-border);
+      border-radius: 12px;
+      box-shadow: 0 14px 36px rgba(16,24,40,0.12);
+      overflow: hidden;
+      display: none;
+      z-index: 10;
+      max-height: 420px;
+      overflow-y: auto;
+      direction: ltr;
+      text-align: left;
+    }
+    #appRoot .item {
+      padding: 12px 16px;
+      border-bottom: 1px solid #eef1f4;
+      cursor: pointer;
+      text-align: left;
+      direction: ltr;
+      color: var(--oa-text);
+      background: white;
+    }
+    #appRoot .item:last-child {
+      border-bottom: none;
+    }
+    #appRoot .item:hover,
+    #appRoot .item.active {
+      background: var(--oa-hover);
+    }
+    #appRoot .title {
+      font-size: 15px;
+      line-height: 1.45;
+    }
+    #appRoot .footer-note {
+      margin-top: 22px;
+      color: var(--oa-text);
+      font-size: 16px;
+      line-height: 1.6;
+    }
+    #appRoot .footer-note a {
+      color: inherit;
+    }
+
+    #appRoot input[type="radio"] {
+      width: auto;
+      height: auto;
+      margin: 0;
+      padding: 0;
+      border: initial;
+      box-shadow: none;
+      background: transparent;
+      outline: none;
+      accent-color: var(--oa-accent);
+      vertical-align: middle;
+      appearance: auto;
+      -webkit-appearance: radio;
+    }
+    #appRoot input[type="radio"]:focus,
+    #appRoot input[type="radio"]:checked {
+      box-shadow: none;
+      background: transparent;
+    }
+    #appRoot .status a,
+    #appRoot .footer-note a {
+      color: #0969da;
+      text-decoration: underline;
+      background: transparent;
+      border: 0;
+      box-shadow: none;
+      padding: 0;
+      margin: 0;
+      outline: none;
+    }
+    #appRoot .status a:visited,
+    #appRoot .footer-note a:visited,
+    #appRoot .status a:hover,
+    #appRoot .footer-note a:hover {
+      color: #0969da;
+      text-decoration: underline;
+      background: transparent;
+    }
+
+    #appRoot mark {
+      background: transparent;
+      color: inherit;
+      font-weight: 700;
+      padding: 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="appRoot" lang="he" dir="rtl">
+  <div class="wrap">
+    <div class="card">
+      <div class="topbar">
+        <div class="title-wrap">
+          <h1 id="pageTitle">מערכת לחיפוש כתבי עת וספרים הזכאים למימון בפרסום הפתוח</h1>
+        </div>
+        <button id="langToggle" class="lang-switch" type="button">English</button>
+      </div>
+      <p id="pageDesc">מעוניינים לפרסום בגישה פתוחה?<br>להלן הממשק שבו ניתן לבדוק האם האוניברסיטה יכולה לסייע במימון הפרסום הפתוח.<br><br>בחרו את פורמט הפרסום:</p>
+
+      <div class="radio-row">
+        <label class="radio-item">
+          <input type="radio" name="searchType" value="books" />
+          <span id="booksLabel">ספר</span>
+        </label>
+        <label class="radio-item">
+          <input type="radio" name="searchType" value="journals" />
+          <span id="journalsLabel">מאמר</span>
+        </label>
+      </div>
+
+      <div id="booksPanel" class="panel">
+        <input type="text" tabindex="-1" aria-hidden="true" style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0" autocomplete="off" />
+        <form autocomplete="off" onsubmit="return false;">
+          <div class="search-area">
+            <input id="booksInput" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" name="x_books_lookup_91723" inputmode="search" data-lpignore="true" data-form-type="other" lang="zxx" readonly onfocus="this.removeAttribute('readonly');" placeholder="הכניסו את שם המו"ל" />
+            <div id="booksDropdown" class="dropdown"></div>
+          </div>
+        </form>
+        <div id="booksStatus" class="status subtle-default"></div>
+      </div>
+
+      <div id="journalsPanel" class="panel">
+        <form autocomplete="off" onsubmit="return false;">
+          <div class="search-area">
+            <input id="journalsInput" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" name="x_journals_lookup_91723" inputmode="search" data-lpignore="true" data-form-type="other" lang="zxx" readonly onfocus="this.removeAttribute('readonly');" placeholder="הכניסו את שם כתב העת או מספר ISSN" />
+            <div id="journalsDropdown" class="dropdown"></div>
+          </div>
+        </form>
+        <div id="journalsStatus" class="status subtle-default"></div>
+      </div>
+
+      <div id="globalFooter" class="footer-note">
+        לשאלות/הבהרות/הערות נוספות יש לפנות במייל
+        <a href="mailto:openaccess@savion.huji.ac.il">openaccess@savion.huji.ac.il</a>.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const BOOKS = __BOOKS__;
+    const JOURNALS = __JOURNALS__;
+
+    const I18N = {
+      he: {
+        lang:'he', dir:'rtl',
+        title:'מערכת לחיפוש כתבי עת וספרים הזכאים למימון בפרסום הפתוח',
+        desc:'מעוניינים לפרסום בגישה פתוחה?<br>להלן הממשק שבו ניתן לבדוק האם האוניברסיטה יכולה לסייע במימון הפרסום הפתוח.<br><br>בחרו את פורמט הפרסום:',
+        books:'ספר', journals:'מאמר',
+        booksPlaceholder:'הכניסו את שם המו"ל',
+        journalsPlaceholder:'הכניסו את שם כתב העת או מספר ISSN',
+        switch:'English',
+        publisherDefault:'לצערנו, מו"ל שאינו נמצא בחיפוש אינו נתמך על ידי הקרן לפרסום פתוח',
+        journalDefault:'לצערנו, כתב עת שאינו נמצא בחיפוש אינו נתמך על ידי הקרן לפרסום פתוח',
+        bookFound:'<b>המו"ל נתמך על ידי הקרן האוניברסיטאית לפרסום פתוח</b>.<br><br>שימו לב:<br>· המימון יהיה מחצית מהעלות או עד 5000$, הנמוך מבין השניים.<br>· המימון יוגבל <b>לפניה אחת</b> בשלוש לשנים לחבר/ת סגל (באותה שנה לא ניתן לבקש מימון לפרסום מאמר פתוח).<br><br>להגשת הבקשה לתמיכה במימון נא למלא את הטופס <a href="https://docs.google.com/forms/d/e/1FAIpQLSfI_ZFbo4qc34DTaU62M_78MqRXXgBvWylHz_tUQZlUb4_5GQ/viewform?pli=1" target="_blank" rel="noopener">בקישור הזה</a>',
+        journalFoundKeren:'<b>כתב העת נתמך על ידי הקרן האוניברסיטאית לפרסום.</b><br><br>להלן תנאי הקרן:<br>· חבר/ת הסגל מהאוניברסיטה העברית הפונה לקבל את התמיכה מוגדר/ת כ PI במאמר זה.<br>· המימון יהיה בגובה 50% מעלות המאמר.<br>· מאמרים שפרסומם בעלות עד 500$ ימומנו במלואם על ידי הקרן.<br>· המימון יוגבל לפניה אחת בשנה לחבר/ת סגל.<br><br>להגשת הבקשה לתמיכה במימון נא למלא את הטופס <a href="https://docs.google.com/forms/d/e/1FAIpQLSfI_ZFbo4qc34DTaU62M_78MqRXXgBvWylHz_tUQZlUb4_5GQ/viewform?pli=1" target="_blank" rel="noopener">בקישור הזה</a>',
+        journalFoundAgreement:'<b>כתב העת נתמך על ידי הסכם בין האוניברסיטה לבין המו"ל __PUBLISHER__.</b> <br>ניתן לפרסם את המאמר ללא עלות.',
+        journalFoundACS:'<b>כתב העת נתמך על ידי הסכם בין האוניברסיטה לבין המו"ל ACS.</b><br>ההסכם כולל בתוכו מספר מוגבל של מאמרים ולכן נדרש אישור מהספרייה לכל פרסום בגישה פתוחה.<br><br><b>שימו לב:</b><br>מימון הפרסום הפתוח ללא עלות מוגבל למקסימום 2 מאמרים לחוקר ראשי (PI) לשנה,<br>ובתנאי שהפרסום יהיה בכתב עת המדורג ב-Q1 של JCR.<br>לשאלות/הבהרות/הערות יש לפנות במייל <a href="mailto:shirpe@savion.huji.ac.il">shirpe@savion.huji.ac.il</a>',
+        journalFoundSageNoFund:'<b>כתב העת נתמך על ידי ההסכם עם המו"ל SAGE.</b><br>ניתן לפרסם את המאמר בעלות המופחתת העומדת על 200 GBP.<br>',
+        journalFoundSageWithFund:'<b>כתב העת נתמך על ידי ההסכם עם המו"ל SAGE.</b><br>ניתן לפרסם את המאמר בעלות המופחתת העומדת על 200 GBP.<br>בנוסף, כתב העת זכאי לתמיכה של הקרן האוניברסיטאית לפרסום פתוח, אך תמיכה זו מוגבלת לפעם בשנה.<br>באפשרותכם לבחור אם לשלם או לפנות לקרן <a href="https://docs.google.com/forms/d/e/1FAIpQLSfI_ZFbo4qc34DTaU62M_78MqRXXgBvWylHz_tUQZlUb4_5GQ/viewform?pli=1" target="_blank" rel="noopener">בקישור הזה</a>.'
+      },
+      en: {
+        lang:'en', dir:'ltr',
+        title:'Open-access funding search for journals and books',
+        desc:'Interested in open-access publishing?<br>Below is the interface where you can check whether the university can help fund the open-access publication.<br><br>Choose the publication format:',
+        books:'Book', journals:'Article',
+        booksPlaceholder:'Enter the publisher name',
+        journalsPlaceholder:'Enter the journal name or ISSN',
+        switch:'עברית',
+        publisherDefault:'Unfortunately, a publisher that does not appear in the search is not supported by the open-access fund',
+        journalDefault:'Unfortunately, a journal that does not appear in the search is not supported by the open-access fund',
+        bookFound:'<b>The publisher is supported by the university open-access fund</b>.<br><br>Please note:<br>· Funding will cover half of the cost or up to $5000, whichever is lower.<br>· Funding is limited to <b>one request</b> over three years per faculty member (and in the same year, it is not possible to request funding for an open-access article).<br><br>To submit the funding request, please fill out the form <a href="https://docs.google.com/forms/d/e/1FAIpQLSfI_ZFbo4qc34DTaU62M_78MqRXXgBvWylHz_tUQZlUb4_5GQ/viewform?pli=1" target="_blank" rel="noopener">at this link</a>',
+        journalFoundKeren:'<b>The journal is supported by the university publication fund.</b><br><br>Fund conditions:<br>· The Hebrew University faculty member requesting the support must be defined as the PI on this article.<br>· Funding will cover 50% of the article cost.<br>· Articles with publication costs up to $500 will be fully funded by the fund.<br>· Funding is limited to one request per year per faculty member.<br><br>To submit the funding request, please fill out the form <a href="https://docs.google.com/forms/d/e/1FAIpQLSfI_ZFbo4qc34DTaU62M_78MqRXXgBvWylHz_tUQZlUb4_5GQ/viewform?pli=1" target="_blank" rel="noopener">at this link</a>',
+        journalFoundAgreement:'<b>The journal is covered by an agreement between the university and the publisher __PUBLISHER__.</b> <br>The article can be published at no cost.',
+        journalFoundACS:'<b>The journal is supported by an agreement between the university and the publisher ACS.</b><br>The agreement includes a limited number of articles, so library approval is required for every open-access publication.<br><br><b>Please note:</b><br>Open-access publication funding at no cost is limited to a maximum of 2 articles per principal investigator (PI) per year,<br>provided that the publication is in a journal ranked Q1 in JCR.<br>For questions / clarifications / comments, please contact <a href="mailto:shirpe@savion.huji.ac.il">shirpe@savion.huji.ac.il</a>',
+        journalFoundSageNoFund:'<b>כתב העת נתמך על ידי ההסכם עם המו"ל SAGE.</b><br>ניתן לפרסם את המאמר בעלות המופחתת העומדת על 200 GBP.<br>',
+        journalFoundSageWithFund:'<b>כתב העת נתמך על ידי ההסכם עם המו"ל SAGE.</b><br>ניתן לפרסם את המאמר בעלות המופחתת העומדת על 200 GBP.<br>בנוסף, כתב העת זכאי לתמיכה של הקרן האוניברסיטאית לפרסום פתוח, אך תמיכה זו מוגבלת לפעם בשנה.<br>באפשרותכם לבחור אם לשלם או לפנות לקרן <a href="https://docs.google.com/forms/d/e/1FAIpQLSfI_ZFbo4qc34DTaU62M_78MqRXXgBvWylHz_tUQZlUb4_5GQ/viewform?pli=1" target="_blank" rel="noopener">בקישור הזה</a>.'
+      }
+    };
+
+    let currentLang = 'he';
+
+    const booksPanel = document.getElementById('booksPanel');
+    const journalsPanel = document.getElementById('journalsPanel');
+    const radios = [...document.querySelectorAll('input[name="searchType"]')];
+    const booksInput = document.getElementById('booksInput');
+    const booksDropdown = document.getElementById('booksDropdown');
+    const booksStatus = document.getElementById('booksStatus');
+    const journalsInput = document.getElementById('journalsInput');
+    const journalsDropdown = document.getElementById('journalsDropdown');
+    const journalsStatus = document.getElementById('journalsStatus');
+
+    function t(key) { return I18N[currentLang][key]; }
+
+    function updateInputDirection(input) {
+      const hasText = input.value.trim().length > 0;
+      input.classList.remove('placeholder-he', 'input-ltr');
+      if (hasText) {
+        input.classList.add('input-ltr');
+      } else {
+        if (currentLang === 'he') input.classList.add('placeholder-he');
+        else input.classList.add('input-ltr');
+      }
+    }
+
+    function refreshInputDirections() {
+      updateInputDirection(booksInput);
+      updateInputDirection(journalsInput);
+    }
+
+    function applyLanguage() {
+      const appRoot = document.getElementById('appRoot');
+      appRoot.lang = I18N[currentLang].lang;
+      appRoot.dir = I18N[currentLang].dir;
+      appRoot.classList.toggle('oa-ltr', currentLang === 'en');
+      document.getElementById('pageTitle').textContent = t('title');
+      document.getElementById('pageDesc').innerHTML = t('desc');
+      document.getElementById('booksLabel').textContent = t('books');
+      document.getElementById('journalsLabel').textContent = t('journals');
+      booksInput.placeholder = t('booksPlaceholder');
+      journalsInput.placeholder = t('journalsPlaceholder');
+      document.getElementById('langToggle').textContent = t('switch');
+      document.getElementById('globalFooter').innerHTML = currentLang === 'he'
+        ? 'לשאלות/הבהרות/הערות נוספות יש לפנות במייל <a href="mailto:openaccess@savion.huji.ac.il">openaccess@savion.huji.ac.il</a>.'
+        : 'For further questions / clarifications / comments, please contact <a href="mailto:openaccess@savion.huji.ac.il">openaccess@savion.huji.ac.il</a>.';
+      refreshInputDirections();
+    }
+
+    function clearStatus(el) { el.innerHTML = ''; el.className = 'status'; }
+
+    function setDefaultStatus(type) {
+      if (type === 'books') {
+        booksStatus.innerHTML = `${t('publisherDefault')}<br><br>`;
+        booksStatus.className = 'status subtle-default';
+        clearStatus(journalsStatus);
+      } else if (type === 'journals') {
+        journalsStatus.innerHTML = `${t('journalDefault')}<br><br>`;
+        journalsStatus.className = 'status subtle-default';
+        clearStatus(booksStatus);
+      } else {
+        clearStatus(booksStatus);
+        clearStatus(journalsStatus);
+      }
+    }
+
+    function setActivePanel(type) {
+      booksPanel.classList.toggle('active', type === 'books');
+      journalsPanel.classList.toggle('active', type === 'journals');
+      booksInput.value = '';
+      journalsInput.value = '';
+      refreshInputDirections();
+      booksDropdown.style.display = 'none';
+      journalsDropdown.style.display = 'none';
+      clearStatus(booksStatus);
+      clearStatus(journalsStatus);
+      setDefaultStatus(type);
+    }
+
+    document.getElementById('langToggle').addEventListener('click', () => {
+      currentLang = currentLang === 'he' ? 'en' : 'he';
+      applyLanguage();
+      booksInput.value = '';
+      journalsInput.value = '';
+      booksDropdown.style.display = 'none';
+      journalsDropdown.style.display = 'none';
+      const active = document.querySelector('input[name="searchType"]:checked');
+      if (active) setDefaultStatus(active.value);
+      refreshInputDirections();
+    });
+
+    radios.forEach(radio => radio.addEventListener('change', () => setActivePanel(radio.value)));
+
+    function normalizeText(s) { return (s || '').toLowerCase().trim(); }
+    function normalizeIssn(s) { return (s || '').toUpperCase().replace(/[^0-9X]/g, ''); }
+    function escapeHtml(str) {
+      return (str || '').replace(/[&<>\"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;', "'":'&#39;'}[ch]));
+    }
+
+    function highlightNameInLabel(label, query) {
+      const safeLabel = escapeHtml(label || '');
+      if (!query) return safeLabel;
+      const parenIndex = label.indexOf(' (');
+      const namePart = parenIndex >= 0 ? label.slice(0, parenIndex) : label;
+      const suffix = parenIndex >= 0 ? label.slice(parenIndex) : '';
+      const idx = namePart.toLowerCase().indexOf(query.toLowerCase());
+      if (idx === -1) return safeLabel;
+      return escapeHtml(namePart.slice(0, idx)) + '<mark>' + escapeHtml(namePart.slice(idx, idx + query.length)) + '</mark>' + escapeHtml(namePart.slice(idx + query.length)) + escapeHtml(suffix);
+    }
+
+    function highlightIssnInLabel(label, query) {
+      if (!query) return escapeHtml(label || '');
+      const cleanQuery = normalizeIssn(query);
+      if (!cleanQuery) return escapeHtml(label || '');
+      let normalized = '';
+      const map = [];
+      for (let i = 0; i < label.length; i++) {
+        const c = label[i];
+        if (/[0-9xX]/.test(c)) { normalized += c.toUpperCase(); map.push(i); }
+      }
+      const idx = normalized.indexOf(cleanQuery);
+      if (idx === -1) return escapeHtml(label || '');
+      const start = map[idx];
+      const end = map[idx + cleanQuery.length - 1] + 1;
+      return escapeHtml(label.slice(0, start)) + '<mark>' + escapeHtml(label.slice(start, end)) + '</mark>' + escapeHtml(label.slice(end));
+    }
+
+    function searchBooks(query) {
+      const q = query.trim();
+      if (!q) return [];
+      const qText = normalizeText(q);
+      let matches = BOOKS.filter(item =>
+        item.names.some(name => normalizeText(name).includes(qText)) ||
+        normalizeText(item.displayName).includes(qText)
+      );
+      matches.sort((a, b) => {
+        const aStarts = normalizeText(a.displayName).startsWith(qText) || a.names.some(n => normalizeText(n).startsWith(qText));
+        const bStarts = normalizeText(b.displayName).startsWith(qText) || b.names.some(n => normalizeText(n).startsWith(qText));
+        if (aStarts !== bStarts) return aStarts ? -1 : 1;
+        return a.displayName.localeCompare(b.displayName);
+      });
+      return matches.slice(0, 50);
+    }
+
+    function searchJournals(query) {
+      const q = query.trim();
+      if (!q) return [];
+      const stripped = q.replace(/\s*\(.*\)\s*$/, '').trim();
+      const qText = normalizeText(stripped || q);
+      const parenMatch = q.match(/\((.*?)\)/);
+      const explicitIssns = parenMatch ? parenMatch[1].split(',').map(s => normalizeIssn(s)).filter(Boolean) : [];
+      const plainIssn = explicitIssns.length ? '' : normalizeIssn(q);
+      const rawIssnQuery = q.trim();
+      const hasIssnSearch =
+          explicitIssns.length > 0 ||
+          (!!plainIssn && /^\d[\d-]*$/.test(rawIssnQuery));
+
+      let matches = JOURNALS.filter(item => {
+        const nameMatch = item.names.some(name => normalizeText(name).includes(qText)) || normalizeText(item.displayName).includes(qText);
+        const issnMatch = explicitIssns.length
+          ? explicitIssns.some(target => item.normSearchIssns.includes(target))
+          : (plainIssn ? item.normSearchIssns.some(issn => issn.includes(plainIssn)) : false);
+        return hasIssnSearch ? (issnMatch || nameMatch) : nameMatch;
+      });
+
+      matches.sort((a, b) => {
+        if (hasIssnSearch) {
+          const aStarts = explicitIssns.length ? explicitIssns.some(target => a.normSearchIssns.includes(target))
+                                               : a.normSearchIssns.some(issn => issn.startsWith(plainIssn));
+          const bStarts = explicitIssns.length ? explicitIssns.some(target => b.normSearchIssns.includes(target))
+                                               : b.normSearchIssns.some(issn => issn.startsWith(plainIssn));
+          if (aStarts !== bStarts) return aStarts ? -1 : 1;
+        } else {
+          const aStarts = normalizeText(a.displayName).startsWith(qText) || a.names.some(n => normalizeText(n).startsWith(qText));
+          const bStarts = normalizeText(b.displayName).startsWith(qText) || b.names.some(n => normalizeText(n).startsWith(qText));
+          if (aStarts !== bStarts) return aStarts ? -1 : 1;
+        }
+        return a.displayName.localeCompare(b.displayName);
+      });
+
+      return matches.slice(0, 50);
+    }
+
+    function renderDropdown(dropdown, results, query, isJournalSearch) {
+      if (!results.length) {
+        dropdown.style.display = 'none';
+        dropdown.innerHTML = '';
+        return;
+      }
+      const shouldHighlightIssn = /^\d[\d-]*$/.test(query.trim());
+      dropdown.innerHTML = results.map((item, index) => {
+        const titleHtml =
+          isJournalSearch && shouldHighlightIssn
+            ? highlightIssnInLabel(item.uniqueLabel, query)
+            : highlightNameInLabel(item.uniqueLabel, query);
+        return `<div class="item" data-index="${index}"><div class="title">${titleHtml}</div></div>`;
+      }).join('');
+      dropdown.style.display = 'block';
+    }
+
+    function agreementJournalMessage(item) {
+      const publisher = item.agreementPublisher || '';
+      if (publisher.toLowerCase() === 'acs') {
+        return currentLang === 'he'
+          ? '<b>כתב העת נתמך על ידי הסכם בין האוניברסיטה לבין המו"ל ACS.</b><br>ההסכם כולל בתוכו מספר מוגבל של מאמרים ולכן נדרש אישור מהספרייה לכל פרסום בגישה פתוחה.<br><br><b>שימו לב:</b><br>מימון הפרסום הפתוח ללא עלות מוגבל למקסימום 2 מאמרים לחוקר ראשי (PI) לשנה,<br>ובתנאי שהפרסום יהיה בכתב עת המדורג ב-Q1 של JCR.<br>לשאלות/הבהרות/הערות יש לפנות במייל <a href="mailto:shirpe@savion.huji.ac.il">shirpe@savion.huji.ac.il</a>'
+          : '<b>The journal is supported by an agreement between the university and the publisher ACS.</b><br>The agreement includes a limited number of articles, so library approval is required for every open-access publication.<br><br><b>Please note:</b><br>Open-access publication funding at no cost is limited to a maximum of 2 articles per principal investigator (PI) per year,<br>provided that the publication is in a journal ranked Q1 in JCR.<br>For questions / clarifications / comments, please contact <a href="mailto:shirpe@savion.huji.ac.il">shirpe@savion.huji.ac.il</a>';
+      }
+      if (publisher.toLowerCase() !== 'sage') {
+        return t('journalFoundAgreement').replace('__PUBLISHER__', publisher);
+      }
+      return item.sageHasOpenFund ? t('journalFoundSageWithFund') : t('journalFoundSageNoFund');
+    }
+
+    function attachDropdownBehavior(input, dropdown, searchFn, isJournalSearch, statusEl) {
+      let currentResults = [];
+      let activeIndex = -1;
+
+      function chooseResult(index) {
+        const item = currentResults[index];
+        if (!item) return;
+        input.value = item.uniqueLabel;
+        updateInputDirection(input);
+        dropdown.style.display = 'none';
+        const type = input.id === 'booksInput' ? 'books' : 'journals';
+        if (type === 'books') {
+          statusEl.innerHTML = t('bookFound');
+          statusEl.className = 'status found';
+        } else {
+          if ((item.agreementTabs || []).length) {
+            statusEl.innerHTML = agreementJournalMessage(item);
+          } else if (item.isInKeren) {
+            statusEl.innerHTML = t('journalFoundKeren');
+          } else {
+            statusEl.innerHTML = t('journalDefault');
+            statusEl.className = 'status subtle-default';
+            return;
+          }
+          statusEl.className = 'status found';
+        }
+      }
+
+      function updateActive(nextIndex) {
+        const items = [...dropdown.querySelectorAll('.item')];
+        items.forEach(el => el.classList.remove('active'));
+        if (nextIndex >= 0 && items[nextIndex]) {
+          items[nextIndex].classList.add('active');
+          items[nextIndex].scrollIntoView({ block: 'nearest' });
+        }
+      }
+
+      input.addEventListener('input', e => {
+        if (input.id === 'booksInput') setDefaultStatus('books');
+        else if (input.id === 'journalsInput') setDefaultStatus('journals');
+        updateInputDirection(input);
+        currentResults = searchFn(e.target.value);
+        activeIndex = -1;
+        if (!e.target.value.trim()) {
+          dropdown.style.display = 'none';
+          dropdown.innerHTML = '';
+        } else {
+          renderDropdown(dropdown, currentResults, e.target.value, isJournalSearch);
+        }
+        [...dropdown.querySelectorAll('.item')].forEach(el => {
+          el.addEventListener('pointerdown', evt => {
+			evt.preventDefault();
+			chooseResult(Number(el.dataset.index));
+		  });
+        });
+
+      });
+
+      input.addEventListener('keydown', e => {
+        if (dropdown.style.display !== 'block') return;
+        if (e.key === 'ArrowDown') {
+          e.preventDefault(); activeIndex = Math.min(activeIndex + 1, currentResults.length - 1); updateActive(activeIndex);
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault(); activeIndex = Math.max(activeIndex - 1, 0); updateActive(activeIndex);
+        } else if (e.key === 'Enter' && activeIndex >= 0) {
+          e.preventDefault(); chooseResult(activeIndex);
+        } else if (e.key === 'Escape') {
+          dropdown.style.display = 'none';
+        }
+      });
+    }
+
+    attachDropdownBehavior(booksInput, booksDropdown, searchBooks, false, booksStatus);
+    attachDropdownBehavior(journalsInput, journalsDropdown, searchJournals, true, journalsStatus);
+
+    document.addEventListener('click', e => {
+      // keep dropdown visible if there are current results; only restart actions should close it
+    });
+
+    applyLanguage();
+    refreshInputDirections();
+    document.querySelector('input[name="searchType"][value="books"]').checked = true;
+    setActivePanel('books');
+  </script>
+  </div>
+  <div id="browserBlock" style="display:none;"></div>
+
+
+<script>
+(function(){
+  function browserInfo() {
+    const ua = navigator.userAgent || "";
+    const vendor = navigator.vendor || "";
+    const isAndroid = /Android/i.test(ua);
+    const isIOS = /iPhone|iPad|iPod/i.test(ua);
+    const isEdge = /Edg/i.test(ua);
+    const isOpera = /OPR|Opera/i.test(ua);
+    const isFirefox = /Firefox|FxiOS/i.test(ua);
+    const isSamsung = /SamsungBrowser/i.test(ua);
+    const isChrome = /Chrome/i.test(ua) && /Google Inc/i.test(vendor) && !isEdge && !isOpera && !isSamsung;
+    const isAndroidWebView = isAndroid && /; wv\)|Version\/[0-9.]+ Chrome\//i.test(ua);
+    const isProbablyNonChrome = isFirefox || isEdge || isOpera || isSamsung || isAndroidWebView;
+    const isUncertainAndroid = isAndroid && !isChrome;
+    return { ua, vendor, isAndroid, isIOS, isEdge, isOpera, isFirefox, isSamsung, isChrome, isAndroidWebView, isProbablyNonChrome, isUncertainAndroid };
+  }
+
+  const info = browserInfo();
+  const app = document.getElementById('appRoot');
+  const block = document.getElementById('browserBlock');
+  if (!app || !block) return;
+
+  const blockHtml = `
+    <div style="text-align:center;margin-top:80px;font-size:18px;line-height:1.6;padding:0 20px;">
+      <div style="font-weight:600;margin-bottom:12px;">
+        המערכת נתמכת בדפדפן Chrome בלבד
+      </div>
+      <div style="margin-bottom:18px;">
+        נא לפתוח את המערכת בדפדפן Chrome לצורך שימוש תקין
+      </div>
+      <div style="font-weight:600;margin-bottom:12px;">
+        This system is supported in Chrome only
+      </div>
+      <div>
+        Please open it in Chrome for proper use
+      </div>
+    </div>
+  `;
+
+  const warnHtml = `
+    <div style="max-width:760px;margin:40px auto 0;padding:0 20px;">
+      <div style="border:1px solid #d0d7de;border-radius:14px;background:#fff;padding:20px;text-align:center;line-height:1.6;">
+        <div style="font-weight:600;margin-bottom:12px;">
+          ייתכן שהמערכת לא נפתחה ב-Chrome
+        </div>
+        <div style="margin-bottom:18px;">
+          במכשירי Android לא תמיד ניתן לזהות בוודאות את הדפדפן. אם משהו לא עובד, נא לפתוח את הקישור ישירות ב-Chrome.
+        </div>
+        <div style="font-weight:600;margin-bottom:12px;">
+          This may not be Chrome
+        </div>
+        <div>
+          On Android, browser detection is not always reliable. If anything does not work, please open this page directly in Chrome.
+        </div>
+      </div>
+    </div>
+  `;
+
+  if (false & info.isProbablyNonChrome) {
+    app.style.display = 'none';
+    block.style.display = 'block';
+    block.innerHTML = blockHtml;
+    return;
+  }
+
+  if (info.isUncertainAndroid) {
+    block.style.display = 'block';
+    block.innerHTML = warnHtml;
+  }
+})();
+</script>
+
+
+</body>
+</html>

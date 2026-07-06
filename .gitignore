@@ -1,0 +1,4 @@
+flask_html_generator/outputs
+flask_html_generator/uploads
+__pycache__/
+*.pyc
